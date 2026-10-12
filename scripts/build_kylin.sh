@@ -81,6 +81,7 @@ echo "==> Installing Python dependencies into package..."
 # Layout: /opt/.../app/backend/app/main.py → parents[2] = /opt/.../app
 # and FRONTEND = app/frontend — matches.
 
+mkdir -p "$OPT_DIR/bin" "$DEB_ROOT/usr/bin"
 cat > "$OPT_DIR/bin/field-lineage-workbench" <<'WRAP'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -101,7 +102,6 @@ PORT="${PORT:-8766}"
 HOST="${HOST:-0.0.0.0}"
 exec "$PY" -m uvicorn backend.app.main:app --host "$HOST" --port "$PORT"
 WRAP
-mkdir -p "$OPT_DIR/bin"
 chmod 755 "$OPT_DIR/bin/field-lineage-workbench"
 ln -sf /opt/field-lineage-workbench/bin/field-lineage-workbench \
   "$DEB_ROOT/usr/bin/field-lineage-workbench"
