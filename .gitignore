@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Runtime / local
+data/*.db
+data/*.db-*
+*.log
+
+# Local vendor (macOS wheels) — CI installs Linux deps
+vendor/
+
+# Packaging intermediates
+packaging/wheels/
+packaging/build/
+packaging/out/
+dist/
+
+# Figma / IDE
+.figma-make/
+.DS_Store
+.idea/
+.vscode/
+*.swp

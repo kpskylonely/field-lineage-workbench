@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>字段级数据血缘工作台</title>
+  <link rel="stylesheet" href="/assets/styles.css?v=5" />
+  <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">FL</div>
+        <div>
+          <div class="brand-title">血缘工作台</div>
+          <div class="brand-sub">字段被谁用 · 接口用了什么</div>
+        </div>
+      </div>
+      <nav id="nav">
+        <button data-view="chain" class="active">血缘探索</button>
+        <button data-view="dashboard">总览与闸门</button>
+        <button data-view="fields">字段主表 · 04</button>
+        <button data-view="references">引用事实 · 15</button>
+        <button data-view="dicts">字典值域 · 09</button>
+        <button data-view="issues">问题清单 · 24</button>
+        <button data-view="catalog">对象与入口</button>
+        <button data-view="framework">29表框架</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div>只回答两个问题</div>
+        <div class="muted">表字段引用 · 接口触达</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="view-title">血缘探索</h1>
+          <p id="view-desc" class="muted">选表看引用；选接口看库表字段</p>
+        </div>
+        <div class="top-actions">
+          <span id="health" class="pill">检测中…</span>
+          <button id="btn-refresh" class="btn ghost">刷新统计</button>
+        </div>
+      </header>
+
+      <section id="view-chain" class="view active"></section>
+      <section id="view-dashboard" class="view"></section>
+      <section id="view-fields" class="view"></section>
+      <section id="view-references" class="view"></section>
+      <section id="view-dicts" class="view"></section>
+      <section id="view-issues" class="view"></section>
+      <section id="view-catalog" class="view"></section>
+      <section id="view-framework" class="view"></section>
+    </main>
+  </div>
+
+  <div id="drawer" class="drawer hidden">
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <h2 id="drawer-title">详情</h2>
+        <button id="drawer-close" class="btn ghost">关闭</button>
+      </div>
+      <div id="drawer-body"></div>
+    </div>
+  </div>
+
+  <script src="/assets/app.js?v=5"></script>
+  <script src="/assets/drill.js?v=5"></script>
+  <script>
+    boot().catch((e) => {
+      console.error(e);
+      document.getElementById("view-chain").innerHTML =
+        '<div class="card" style="margin:20px"><h3>页面加载失败</h3><pre class="mono">' +
+        String((e && e.stack) || e) +
+        "</pre></div>";
+    });
+  </script>
+</body>
+</html>

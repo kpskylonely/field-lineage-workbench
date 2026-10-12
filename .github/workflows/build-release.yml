@@ -1,0 +1,104 @@
+name: Build release packages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Linux deb (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    env:
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build .deb in Ubuntu 20.04 container (glibc 2.31)
+        env:
+          DOCKER_BUILDX_CACHE: "1"
+        run: bash scripts/build_kylin_docker.sh
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: field-lineage-workbench-deb-${{ matrix.arch }}
+          path: release/field-lineage-workbench_*_${{ matrix.arch }}.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  pre-release:
+    needs: [build-linux]
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare release metadata
+        id: meta
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tag=v${VERSION}-pre.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "name=v${VERSION} pre-release (${SHORT_SHA})" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
+          prerelease: true
+          make_latest: false
+          files: |
+            artifacts/*.deb
+          generate_release_notes: true
+
+  release:
+    needs: [build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: false
+          make_latest: true
+          files: |
+            artifacts/*.deb
+          generate_release_notes: true

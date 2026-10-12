@@ -1,0 +1,17 @@
+[Unit]
+Description=Field Lineage Workbench (字段血缘工作台)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/field-lineage-workbench/app
+Environment=PORT=8766
+Environment=HOST=0.0.0.0
+Environment=FLW_DATA_DIR=/opt/field-lineage-workbench/data
+ExecStart=/opt/field-lineage-workbench/bin/field-lineage-workbench
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,54 @@
+# Kylin V10 / Ubuntu 20.04 builder (glibc 2.31 baseline)
+#
+# Same rules as en-word:
+# 1. Base image MUST stay on Ubuntu 20.04 (glibc 2.31).
+# 2. Do NOT add PPAs, compile CPython, or pip install in this file.
+# 3. Python comes from indygreg standalone builds (portable, wheel-friendly).
+# 4. App deps install at container RUN time via scripts/.
+#
+# See docs/KYLIN_BUILD.md
+
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/opt/python/bin:/usr/local/bin:${PATH}"
+ENV PYTHON=/opt/python/bin/python3
+
+ARG PY_RELEASE=20241016
+ARG PY_VERSION=3.10.15
+ARG NODE_VERSION=20.18.3
+ARG TARGETARCH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates curl xz-utils \
+      build-essential pkg-config \
+      dpkg-dev binutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Portable CPython (indygreg). Linked for older glibc; pip wheels work reliably.
+RUN case "${TARGETARCH}" in \
+      amd64) PY_ARCH=x86_64-unknown-linux-gnu ;; \
+      arm64) PY_ARCH=aarch64-unknown-linux-gnu ;; \
+      *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && mkdir -p /opt/python \
+    && curl -fsSL \
+      "https://github.com/indygreg/python-build-standalone/releases/download/${PY_RELEASE}/cpython-${PY_VERSION}+${PY_RELEASE}-${PY_ARCH}-install_only.tar.gz" \
+      | tar -xz -C /opt/python --strip-components=1 \
+    && python3 --version \
+    && python3 -m pip --version
+
+# Node.js from official tarball (avoid NodeSource apt scripts).
+RUN case "${TARGETARCH}" in \
+      amd64) NODE_ARCH=x64 ;; \
+      arm64) NODE_ARCH=arm64 ;; \
+      *) exit 1 ;; \
+    esac \
+    && curl -fsSL \
+      "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" \
+      | tar -xJ -C /usr/local --strip-components=1 \
+    && node --version \
+    && npm --version
+
+WORKDIR /app
